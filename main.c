@@ -26,7 +26,6 @@ typedef enum state_enum {
     INIT, READ_ADC, SET_PWM, SET_DIRECTION, PRINT_LCD, FORWARD, REVERSE
 } state_t;
 
-
 volatile state_t myState;
 volatile int read;
 volatile int read_reset;    /*integer to store value of the reset button*/

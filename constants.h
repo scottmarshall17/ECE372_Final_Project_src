@@ -35,6 +35,12 @@
 #define INTEGER 0
 #define AUTO 0b111
 #define NO_SCAN 0
+#define SCAN 1
+#define DOUBLE_BUFFER 1
+#define THRESHOLD1 1023
+#define THRESHOLD2 1023
+#define THRESHOLD3 1023
+#define THRESHOLD4 1023
 
 
 #ifdef	__cplusplus
