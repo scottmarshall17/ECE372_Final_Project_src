@@ -20,6 +20,7 @@
 #include "keypad.h"
 #include "ADC.h"
 #include "PWM.h"
+#include "control.h"
 
 
 typedef enum state_enum {
