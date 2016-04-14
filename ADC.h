@@ -8,6 +8,7 @@ typedef enum bool_enum{
 
 void initADC(void);
 char readSensors(void); //returns char with format 0b0000[Right][Top][Left][Middle]
+int testSensor(char bitArray);
 boolean frontTriggered(char sensors);
 boolean rightTriggered(char sensors);
 boolean leftTriggered(char sensors);

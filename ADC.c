@@ -28,7 +28,7 @@ void initADC() {
     AD1CON3bits.ADRC = 0;
     AD1CON3bits.SAMC = 0xF;
     AD1CON3bits.ADCS = 1;
-    //AD1CHSbits.CH0NA = 0;
+    AD1CHSbits.CH0NA = 0;
     //AD1CHSbits.CH0SA = 0;
     
     AD1CSSLbits.CSSL0 = 1;  //Right Sensor
@@ -96,6 +96,49 @@ char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Midd
     return result;
 }
 
+int testSensor(char bitArray) {
+    int result = 0;
+    int an0, an2, an4, an8;
+    
+    while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
+    AD1CON1bits.ON = DISABLED;
+    AD1CON1bits.ASAM = 0;
+    
+    if(AD1CON2bits.BUFS == 1) {
+        an0 = ADC1BUF0;
+        an2 = ADC1BUF1;
+        an4 = ADC1BUF2;
+        an8 = ADC1BUF3;
+    }
+    else {
+        an0 = ADC1BUF8;
+        an2 = ADC1BUF9;
+        an4 = ADC1BUFA;
+        an8 = ADC1BUFB;
+    }
+    
+    AD1CON1bits.ASAM = ENABLED;
+    AD1CON1bits.ON = ENABLED;
+    IFS0bits.AD1IF = FLAG_DOWN;
+    
+    if(((bitArray >> 3) & 1) == 1) {
+        result = an0;
+    }
+    else if(((bitArray >> 2) & 1) == 1) {
+        result = an2;
+    }
+    else if(((bitArray >> 1) & 1) == 1) {
+        result = an4;
+    }
+    else if(((bitArray) & 1) == 1) {
+        result = an8;
+    }
+    else {
+        result = -1;
+    }
+    
+    return result;
+}
 //returns char with format 0b0000[Right][Top][Left][Middle]
 
 boolean frontTriggered(char sensors){

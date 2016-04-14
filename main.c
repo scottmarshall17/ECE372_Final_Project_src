@@ -24,7 +24,7 @@
 
 
 typedef enum state_enum {
-    INIT, READ_ADC, SET_PWM, SET_DIRECTION, PRINT_LCD, FORWARD, REVERSE
+    INIT, TOP, RIGHT, MIDDLE, LEFT, SET_DIRECTION, PRINT_LCD, FORWARD, RESUME
 } state_t;
 
 volatile state_t myState;
@@ -41,9 +41,11 @@ int main(void)
     int lastVoltage = 0;
     char charToWrite = 0;
     char numberToPrint[5] = {' ', ' ',  ' ',  ' ',  '\0'};
+    char sensors = 0b00000001;
     SYSTEMConfigPerformance(10000000);
     enableInterrupts();
-    myState = INIT;
+    myState = MIDDLE;
+    initButton();
     initLEDs();
     initTimers();
     initLCD();
@@ -51,58 +53,82 @@ int main(void)
     initPWM();
     initADC();
     
+    //format 0b0000[Right][Top][Left][Middle]
+    
     while(1)
     {
         switch(myState) {
             case INIT:
-                myState = READ_ADC;
+                sensors = 0b00000100;
+                myState = TOP;
                 break;
-            case READ_ADC:
-                //QA: incrementing the ADC to cycle through speeds/forwards/backwards
-                voltageADC++;
-                delayUs(1000);
-                myState = SET_DIRECTION;
-                break;
-            case SET_DIRECTION:
-                //After maximum value reached, don't do anything
-                if (voltageADC > 1023) while(1);
-                if(voltageADC >= 512) {
-                    direction = FORWARD;
-                    LATGbits.LATG13 = ENABLED;
-                    LATDbits.LATD5 = DISABLED;
-                    LATGbits.LATG15 = ENABLED;
-                    LATDbits.LATD11 = DISABLED;
-                }
-                else {
-                    direction = REVERSE;
-                    LATDbits.LATD11 = ENABLED;
-                    LATGbits.LATG13 = DISABLED;
-                    LATDbits.LATD5 = ENABLED;
-                    LATGbits.LATG15 = DISABLED;
-                    
-                }
-                
-                myState = SET_PWM;
-                break;
-            case SET_PWM:
-                
-                if(direction == FORWARD) {
-                    //We know the ADC is greater than or equal to 512
-                    OC3RS = voltageADC;
-                    OC4RS = voltageADC;
-                }
-                if(direction == REVERSE) {
-                    //We know the ADC is less than 512
-                    OC3RS = 1023 - voltageADC;
-                    OC4RS = 1023 - voltageADC;
-                }
-                
-                if(voltageADC != lastVoltage) {
-                    lastVoltage = voltageADC;
+            case RIGHT:
+                voltageADC = testSensor(0b00001000);
+                if(myState != SET_DIRECTION) {
                     myState = PRINT_LCD;
                 }
-                else {
-                    myState = READ_ADC;
+                break;
+            case TOP:
+                voltageADC = testSensor(0b00000100);
+                if(myState != SET_DIRECTION) {
+                    myState = PRINT_LCD;
+                }
+                break;
+            case LEFT:
+                voltageADC = testSensor(0b00000010);
+                if(myState != SET_DIRECTION) {
+                    myState = PRINT_LCD;
+                }
+                break;
+            case MIDDLE:
+                voltageADC = testSensor(0b00000001);
+                if(myState != SET_DIRECTION) {
+                    myState = PRINT_LCD;
+                }
+                break;
+            case SET_DIRECTION:
+                switch(sensors) {
+                        case 0b00001000:
+                            sensors = 0b00000100;
+                            myState = TOP;
+                            break;
+                        case 0b00000100:
+                            sensors = 0b00000010;
+                            myState = LEFT;
+                            break;
+                        case 0b00000010:
+                            sensors = 0b00000001;
+                            myState = MIDDLE;
+                            break;
+                        case 0b00000001:
+                            sensors = 0b00001000;
+                            myState = RIGHT;
+                            break;
+                        default:
+                            myState = INIT;
+                            break;
+                }
+                
+                break;
+            case RESUME:
+                if(myState != SET_DIRECTION) {
+                    switch(sensors) {
+                        case 0b00001000:
+                            myState = RIGHT;
+                            break;
+                        case 0b00000100:
+                            myState = TOP;
+                            break;
+                        case 0b00000010:
+                            myState = LEFT;
+                            break;
+                        case 0b00000001:
+                            myState = MIDDLE;
+                            break;
+                        default:
+                            myState = INIT;
+                            break;
+                    }
                 }
                 break;
             case PRINT_LCD:
@@ -112,7 +138,9 @@ int main(void)
                 moveCursorLCD(0, 5);
                 printStringLCD(numberToPrint);
                 delayUs(30000);
-                myState = READ_ADC;
+                if(myState != SET_DIRECTION) {
+                    myState = RESUME;
+                }
                 break;
         }
     }
@@ -134,20 +162,21 @@ void __ISR(_TIMER_1_VECTOR, IPL7SRS) timer1Handler(void){
 
 void __ISR(_CHANGE_NOTICE_VECTOR, IPL7SRS) _CNInterrupt(void){
     //TODO: Implement the interrupt to capture the press of the button
-    PORTB;
-    IFS1bits.CNBIF = FLAG_DOWN;
+    PORTD;
+    IFS1bits.CNDIF = FLAG_DOWN;
     IFS0bits.T4IF = 0;      //lower timer 4 flag for delay
     TMR4 = 0;  
-    PR4 = 10000;//manually clear timer 4 register
+    PR4 = 15000;//manually clear timer 4 register
     T4CONbits.ON = 1;       //turn timer 4 on.
     while(IFS0bits.T4IF != 1){};    //5ms delay
     T4CONbits.ON = 0;       //turn off timer 4
     IFS0bits.T4IF = 0;
-    read = PORTBbits.RB12;
-    if(1){
+    read = PORTD;
+    read = PORTDbits.RD7;
+    if(read == 0){
         switch(myState) {
             default:
-                myState = myState;
+                myState = SET_DIRECTION;
                 break;
         }
     } else {
