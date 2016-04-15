@@ -55,13 +55,19 @@ int main(void)
     initADC();
     
     //format 0b0000[Right][Top][Left][Middle]
-    
+    /* Green wire: TOP sensor J11 pin 32
+    ** Yellow wire: LEFT sensor J11 pin 30
+    ** Orange wire: MIDDLE sensor   J10 pin
+    ** Red wire: RIGHT sensor   J11 pin 34
+    */
     while(1)
     {
         switch(myState) {
             case INIT:
-                
-                myState = INIT;
+                voltageADC = testSensor(0b00000010);
+                if(myState != SET_DIRECTION) {
+                    myState = PRINT_LCD;
+                }
                 break;
             case RIGHT:
                 turnRight();
@@ -69,18 +75,20 @@ int main(void)
                 while(!frontTriggered(sensors)) {
                     sensors = readSensors();
                 }
+                delayUs(250000);
                 myState = FORWARD;
                 break;
             case FORWARD:
                 goForward();
+                delayUs(250000);
                 sensors = readSensors();
                 while(frontTriggered(sensors)) {
                     if(rightTriggered(sensors) && !turnedRight) {
-                        myState = TURN_RIGHT;
+                        //myState = TURN_RIGHT;
                     }
                     if(rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
-                    myState = PIVOT;
-                }
+                        //myState = PIVOT;
+                    }
                     sensors = readSensors();
                 }
                 if(myState == TURN_RIGHT || myState == PIVOT) {
@@ -110,6 +118,7 @@ int main(void)
                 while(!frontTriggered(sensors)) {
                     sensors = readSensors();
                 }
+                delayUs(250000);
                 myState = FORWARD;
                 break;
             case TURN_RIGHT:
@@ -125,6 +134,9 @@ int main(void)
                     sensors = readSensors();
                 }
                 turnedRight = 1;
+                delayUs(100000);
+                goForward();
+                delayUs(250000);
                 myState = FORWARD;
                 break;
             case PIVOT:
@@ -143,13 +155,13 @@ int main(void)
                             myState = RIGHT;
                             break;
                         case 0b00000100:
-                            myState = TOP;
+                            myState = INIT;
                             break;
                         case 0b00000010:
                             myState = LEFT;
                             break;
                         case 0b00000001:
-                            myState = MIDDLE;
+                            myState = FORWARD;
                             break;
                         default:
                             myState = INIT;
@@ -165,7 +177,7 @@ int main(void)
                 printStringLCD(numberToPrint);
                 delayUs(30000);
                 if(myState != SET_DIRECTION) {
-                    myState = RESUME;
+                    myState = INIT;
                 }
                 break;
         }
