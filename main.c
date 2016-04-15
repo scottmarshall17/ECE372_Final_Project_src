@@ -24,7 +24,7 @@
 
 
 typedef enum state_enum {
-    INIT, TOP, RIGHT, MIDDLE, LEFT, SET_DIRECTION, PRINT_LCD, FORWARD, RESUME
+    INIT, FORWARD, RIGHT, LEFT, PIVOT, TURN_RIGHT, SET_DIRECTION, PRINT_LCD, RESUME
 } state_t;
 
 volatile state_t myState;
@@ -36,7 +36,9 @@ volatile char timer_flag;   /*The timer flag increments every 10ms*/
  */
 int main(void)
 {
+    int i = 0;
     state_t direction = FORWARD;
+    int turnedRight = 0;
     int voltageADC = 0;
     int lastVoltage = 0;
     char charToWrite = 0;
@@ -44,7 +46,7 @@ int main(void)
     char sensors = 0b00000001;
     SYSTEMConfigPerformance(10000000);
     enableInterrupts();
-    myState = MIDDLE;
+    myState = INIT;
     initButton();
     initLEDs();
     initTimers();
@@ -54,61 +56,95 @@ int main(void)
     initADC();
     
     //format 0b0000[Right][Top][Left][Middle]
-    
+    /* Green wire: TOP sensor J11 pin 32
+    ** Yellow wire: LEFT sensor J11 pin 30
+    ** Orange wire: MIDDLE sensor   J10 pin
+    ** Red wire: RIGHT sensor   J11 pin 34
+    */
     while(1)
     {
         switch(myState) {
             case INIT:
-                sensors = 0b00000100;
-                myState = TOP;
-                break;
-            case RIGHT:
-                voltageADC = testSensor(0b00001000);
-                if(myState != SET_DIRECTION) {
-                    myState = PRINT_LCD;
-                }
-                break;
-            case TOP:
-                voltageADC = testSensor(0b00000100);
-                if(myState != SET_DIRECTION) {
-                    myState = PRINT_LCD;
-                }
-                break;
-            case LEFT:
                 voltageADC = testSensor(0b00000010);
                 if(myState != SET_DIRECTION) {
                     myState = PRINT_LCD;
                 }
                 break;
-            case MIDDLE:
-                voltageADC = testSensor(0b00000001);
+            case RIGHT:
+                turnRight();
+                sensors = readSensors();
+                while(!frontTriggered(sensors)) {
+                    sensors = readSensors();
+                }
+                for (i = 0; i<250; i++) delayUs(1000);
+                myState = FORWARD;
+                break;
+            case FORWARD:
+                goForward();
+                for (i = 0; i<25; i++) delayUs(1000);
+                sensors = readSensors();
+                turnedRight = 0;
+                
+                if(!frontTriggered(sensors)){
+                    myState = FORWARD;
+                }
+                
+                if(!rightTriggered(sensors)) myState = TURN_RIGHT;
+              /*  if(!rightTriggered(sensors) && !turnedRight) {
+                    myState = TURN_RIGHT;
+                }
+                /*if(!rightTriggered(sensors) && !leftTriggered(sensors) && !middleTriggered(sensors)) {
+                    myState = PIVOT;
+                }*/
+               /* if(myState == TURN_RIGHT || myState == PIVOT) {
+                    break;
+                }
+                if(!rightTriggered(sensors) && !leftTriggered(sensors) && !middleTriggered(sensors)) {
+                    myState = PIVOT;
+                }
+                else if(!rightTriggered(sensors)) {
+                    myState = TURN_RIGHT;
+                }
+                else if(!leftTriggered(sensors)) {
+                    myState = PIVOT;
+                }
+                else if(!middleTriggered(sensors)) {
+                    myState = FORWARD;
+                }
+                else {
+                    myState = PIVOT;
+                }*/
+                
+                break;
+            case LEFT:
+                turnLeft();
+                sensors = readSensors();
+                while(!frontTriggered(sensors)) {
+                    sensors = readSensors();
+                }
+                for (i = 0; i<250; i++) delayUs(1000);
+                myState = FORWARD;
+                break;
+            case TURN_RIGHT:
+                turnRight();
+                sensors = readSensors();
+
+                while(frontTriggered(sensors)) {
+                    sensors = readSensors();
+                }
+
+                turnedRight = 1;
+                for (i = 0; i<10; i++) delayUs(1000);
+                myState = FORWARD;
+                break;
+            case PIVOT:
                 if(myState != SET_DIRECTION) {
                     myState = PRINT_LCD;
                 }
                 break;
             case SET_DIRECTION:
-                switch(sensors) {
-                        case 0b00001000:
-                            sensors = 0b00000100;
-                            myState = TOP;
-                            break;
-                        case 0b00000100:
-                            sensors = 0b00000010;
-                            myState = LEFT;
-                            break;
-                        case 0b00000010:
-                            sensors = 0b00000001;
-                            myState = MIDDLE;
-                            break;
-                        case 0b00000001:
-                            sensors = 0b00001000;
-                            myState = RIGHT;
-                            break;
-                        default:
-                            myState = INIT;
-                            break;
-                }
-                
+                sensors = readSensors();
+                myState = FORWARD;
                 break;
             case RESUME:
                 if(myState != SET_DIRECTION) {
@@ -117,13 +153,13 @@ int main(void)
                             myState = RIGHT;
                             break;
                         case 0b00000100:
-                            myState = TOP;
+                            myState = INIT;
                             break;
                         case 0b00000010:
                             myState = LEFT;
                             break;
                         case 0b00000001:
-                            myState = MIDDLE;
+                            myState = FORWARD;
                             break;
                         default:
                             myState = INIT;
@@ -134,12 +170,12 @@ int main(void)
             case PRINT_LCD:
                 itoa(numberToPrint, voltageADC, 10);
                 clearLCD();
-                delayUs(10000);
+                for (i = 0; i<10; i++) delayUs(1000);
                 moveCursorLCD(0, 5);
                 printStringLCD(numberToPrint);
-                delayUs(30000);
+                for (i = 0; i<30; i++) delayUs(1000);
                 if(myState != SET_DIRECTION) {
-                    myState = RESUME;
+                    myState = INIT;
                 }
                 break;
         }
