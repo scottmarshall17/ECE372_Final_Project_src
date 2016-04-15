@@ -65,25 +65,25 @@ char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Midd
         an8 = ADC1BUFB;
     }
     
-    if(an0 < THRESHOLD1) {
+    if(an0 > THRESHOLD1) {
         result = result | 1;
     }
     else {
         result = 0;
     }
-    if(an2 < THRESHOLD2) {
+    if(an2 > THRESHOLD2) {
         result = (result << 1) | 1;
     }
     else {
         result = result << 1;
     }
-    if(an4 < THRESHOLD3) {
+    if(an4 > THRESHOLD3) {
         result = (result << 1) | 1;
     }
     else {
         result = result << 1;
     }
-    if(an8 < THRESHOLD4) {
+    if(an8 > THRESHOLD4) {
         result = (result << 1) | 1;
     }
     else {

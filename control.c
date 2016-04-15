@@ -19,6 +19,6 @@ void turnLeft(void){
 void goForward(void){
     //If we want the robot to go straight, we will have both tires 
     //go forward at a middle speed
-    OC3RS = 768;
-    OC4RS = 768;
+    OC3RS = 600;
+    OC4RS = 600;
 }
