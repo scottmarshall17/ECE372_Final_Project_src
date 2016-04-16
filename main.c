@@ -82,11 +82,31 @@ int main(void)
         else {
             //LATDbits.LATD2 = DISABLED;
         }
+        
+        /*clearLCD();
+        for (i = 0; i<10; i++) delayUs(1000);
+        moveCursorLCD(0, 2);
+        printStringLCD("R    T    L");
+        moveCursorLCD(1, 0);
+        voltageADC = testSensor(0b00001000);
+        itoa(numberToPrint, voltageADC, 10);
+        printStringLCD(numberToPrint);
+        printStringLCD(" ");
+        voltageADC = testSensor(0b00000100);
+        itoa(numberToPrint, voltageADC, 10);
+        printStringLCD(numberToPrint);
+        printStringLCD(" ");
+        voltageADC = testSensor(0b00000010);
+        itoa(numberToPrint, voltageADC, 10);
+        printStringLCD(numberToPrint);
+        for (i = 0; i<30; i++) delayUs(1000);
+         */
+        
         switch(myState) {
             case INIT:
                 voltageADC = testSensor(0b00000100);
                 if(myState != SET_DIRECTION) {
-                    myState = PRINT_LCD;
+                    myState = INIT;
                 }
                 break;
             case RIGHT:

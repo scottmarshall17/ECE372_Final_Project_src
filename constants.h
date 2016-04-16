@@ -37,10 +37,10 @@
 #define NO_SCAN 0
 #define SCAN 1
 #define DOUBLE_BUFFER 1
-#define THRESHOLD1 1000
-#define THRESHOLD_TOP 920
-#define THRESHOLD3 1000
-#define THRESHOLD4 1000
+#define THRESHOLD1 900
+#define THRESHOLD_TOP 900
+#define THRESHOLD3 900
+#define THRESHOLD4 900
 
 
 #ifdef	__cplusplus
