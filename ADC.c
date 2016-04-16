@@ -47,23 +47,34 @@ void initADC() {
 
 char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Middle]
     char result = 0;
+    int i = 0;
     int an0, an2, an4, an8;
     
-    while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
-    AD1CON1bits.ASAM = 0;
+    for(i = 0; i < 16; ++i) {
+        while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
+        AD1CON1bits.ASAM = 0;
+
+        if(AD1CON2bits.BUFS == 1) {
+            an0 += ADC1BUF0;
+            an2 += ADC1BUF1;
+            an4 += ADC1BUF2;
+            an8 += ADC1BUF3;
+        }
+        else {
+            an0 += ADC1BUF8;
+            an2 += ADC1BUF9;
+            an4 += ADC1BUFA;
+            an8 += ADC1BUFB;
+        }
+
+        AD1CON1bits.ASAM = ENABLED;
+        IFS0bits.AD1IF = FLAG_DOWN;
+    }
     
-    if(AD1CON2bits.BUFS == 1) {
-        an0 = ADC1BUF0;
-        an2 = ADC1BUF1;
-        an4 = ADC1BUF2;
-        an8 = ADC1BUF3;
-    }
-    else {
-        an0 = ADC1BUF8;
-        an2 = ADC1BUF9;
-        an4 = ADC1BUFA;
-        an8 = ADC1BUFB;
-    }
+    an0 = an0 >> 4;
+    an2 = an2 >> 4;
+    an4 = an4 >> 4;
+    an8 = an8 >> 4;
     
     if(an0 > THRESHOLD1) {
         result = result | 1;
@@ -71,7 +82,7 @@ char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Midd
     else {
         result = 0;
     }
-    if(an2 > THRESHOLD2) {
+    if(an2 > THRESHOLD_TOP) {
         result = (result << 1) | 1;
     }
     else {
@@ -90,37 +101,39 @@ char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Midd
         result = result << 1;
     }
     
-    AD1CON1bits.ASAM = ENABLED;
-    IFS0bits.AD1IF = FLAG_DOWN;
-    
     return result;
 }
 
 int testSensor(char bitArray) {
     int result = 0;
-    int an0, an2, an4, an8;
-    
-    while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
-    AD1CON1bits.ON = DISABLED;
-    AD1CON1bits.ASAM = 0;
-    
-    if(AD1CON2bits.BUFS == 1) {
-        an0 = ADC1BUF0;
-        an2 = ADC1BUF1;
-        an4 = ADC1BUF2;
-        an8 = ADC1BUF3;
+    int an0 = 0, an2 = 0, an4 = 0, an8 = 0;
+    int i = 0;
+    for(i =0; i < 16; ++i) {
+        while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
+        AD1CON1bits.ON = DISABLED;
+        AD1CON1bits.ASAM = 0;
+
+        if(AD1CON2bits.BUFS == 1) {
+            an0 += ADC1BUF0;
+            an2 += ADC1BUF1;
+            an4 += ADC1BUF2;
+            an8 += ADC1BUF3;
+        }
+        else {
+            an0 += ADC1BUF8;
+            an2 += ADC1BUF9;
+            an4 += ADC1BUFA;
+            an8 += ADC1BUFB;
+        }
+
+        AD1CON1bits.ASAM = ENABLED;
+        AD1CON1bits.ON = ENABLED;
+        IFS0bits.AD1IF = FLAG_DOWN;
     }
-    else {
-        an0 = ADC1BUF8;
-        an2 = ADC1BUF9;
-        an4 = ADC1BUFA;
-        an8 = ADC1BUFB;
-    }
-    
-    AD1CON1bits.ASAM = ENABLED;
-    AD1CON1bits.ON = ENABLED;
-    IFS0bits.AD1IF = FLAG_DOWN;
-    
+    an0 = an0 >> 4;
+    an2 = an2 >> 4;
+    an4 = an4 >> 4;
+    an8 = an8 >> 4;
     if(((bitArray >> 3) & 1) == 1) {
         result = an0;
     }

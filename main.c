@@ -63,9 +63,28 @@ int main(void)
     */
     while(1)
     {
+        sensors = readSensors();
+        if(frontTriggered(sensors)) {
+            LATDbits.LATD2 = ENABLED;
+        }
+        else {
+            LATDbits.LATD2 = DISABLED;
+        }
+        if(rightTriggered(sensors)) {
+            LATDbits.LATD0 = ENABLED;
+        }
+        else {
+            LATDbits.LATD0 = DISABLED;
+        }
+        if(leftTriggered(sensors)) {
+            //LATDbits.LATD2 = ENABLED;
+        }
+        else {
+            //LATDbits.LATD2 = DISABLED;
+        }
         switch(myState) {
             case INIT:
-                voltageADC = testSensor(0b00000010);
+                voltageADC = testSensor(0b00000100);
                 if(myState != SET_DIRECTION) {
                     myState = PRINT_LCD;
                 }
@@ -76,44 +95,41 @@ int main(void)
                 while(!frontTriggered(sensors)) {
                     sensors = readSensors();
                 }
-                for (i = 0; i<250; i++) delayUs(1000);
+                delayUs(1000);
                 myState = FORWARD;
                 break;
             case FORWARD:
                 goForward();
-                for (i = 0; i<25; i++) delayUs(1000);
+                delayUs(5000);
                 sensors = readSensors();
-                turnedRight = 0;
-                
-                if(!frontTriggered(sensors)){
-                    myState = FORWARD;
+                while(frontTriggered(sensors)) {
+                    if(rightTriggered(sensors) && !turnedRight) {
+                        //myState = TURN_RIGHT;
+                    }
+                    if(rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
+                        //myState = PIVOT;
+                    }
+                    sensors = readSensors();
                 }
-                
-                if(!rightTriggered(sensors)) myState = TURN_RIGHT;
-              /*  if(!rightTriggered(sensors) && !turnedRight) {
-                    myState = TURN_RIGHT;
-                }
-                /*if(!rightTriggered(sensors) && !leftTriggered(sensors) && !middleTriggered(sensors)) {
-                    myState = PIVOT;
-                }*/
-               /* if(myState == TURN_RIGHT || myState == PIVOT) {
+                if(myState == TURN_RIGHT || myState == PIVOT) {
                     break;
                 }
-                if(!rightTriggered(sensors) && !leftTriggered(sensors) && !middleTriggered(sensors)) {
-                    myState = PIVOT;
+                turnedRight = 0;
+                if(rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
+                    //myState = TURN_RIGHT;
                 }
-                else if(!rightTriggered(sensors)) {
-                    myState = TURN_RIGHT;
+                else if(rightTriggered(sensors)) {
+                    myState = RIGHT;
                 }
-                else if(!leftTriggered(sensors)) {
-                    myState = PIVOT;
+                else if(leftTriggered(sensors)) {
+                    myState = LEFT;
                 }
-                else if(!middleTriggered(sensors)) {
+                else if(middleTriggered(sensors)) {
                     myState = FORWARD;
                 }
                 else {
-                    myState = PIVOT;
-                }*/
+                    myState = RIGHT;
+                }
                 
                 break;
             case LEFT:
@@ -122,7 +138,7 @@ int main(void)
                 while(!frontTriggered(sensors)) {
                     sensors = readSensors();
                 }
-                for (i = 0; i<250; i++) delayUs(1000);
+                delayUs(1000);
                 myState = FORWARD;
                 break;
             case TURN_RIGHT:
