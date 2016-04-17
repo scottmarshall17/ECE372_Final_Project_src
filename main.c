@@ -55,6 +55,11 @@ int main(void)
     initPWM();
     initADC();
     
+    LATDbits.LATD5 = ENABLED;                  //#Assuming that D5 moves it backward when set high 
+    LATDbits.LATD11 = ENABLED;                 //#Assuming that D11 moves it backward when set high 
+    LATGbits.LATG13 = DISABLED;                  //#Assuming that G13 moves it forward when set high 
+    LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
+    
     //format 0b0000[Right][Top][Left][Middle]
     /* Green wire: TOP sensor J11 pin 32
     ** Yellow wire: LEFT sensor J11 pin 30
@@ -120,7 +125,7 @@ int main(void)
                 break;
             case FORWARD:
                 sensors = readSensors();
-                
+                //goForward();
                 if(frontTriggered(sensors)) {
                     goForward();
                 }
@@ -130,15 +135,16 @@ int main(void)
                 else if(leftTriggered(sensors)) {
                     turnLeft();
                 }
-                
+                /*
                 if(frontTriggered(sensors) && rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
                     OC3RS = 500;
                     OC4RS = 500;
                 }
-                
+                */
                 myState = FORWARD;
                 break;
             case LEFT:
+                /*
                 turnLeft();
                 sensors = readSensors();
                 while(!frontTriggered(sensors)) {
@@ -146,6 +152,8 @@ int main(void)
                 }
                 delayUs(1000);
                 myState = FORWARD;
+                 */
+                turnLeft();
                 break;
             case TURN_RIGHT:
                 turnRight();

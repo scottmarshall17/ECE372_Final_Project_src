@@ -26,8 +26,8 @@ void initADC() {
     AD1CON2bits.SMPI = 3;   //because we have 4 inputs to be scanned
     AD1CON2bits.ALTS = 0;
     AD1CON3bits.ADRC = 0;
-    AD1CON3bits.SAMC = 0xF;
-    AD1CON3bits.ADCS = 1;
+    AD1CON3bits.SAMC = 0x3;
+    AD1CON3bits.ADCS = 8;
     AD1CHSbits.CH0NA = 0;
     //AD1CHSbits.CH0SA = 0;
     
@@ -48,9 +48,9 @@ void initADC() {
 char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Middle]
     char result = 0;
     int i = 0;
-    int an0, an2, an4, an8;
+    int an0 = 0, an2 = 0, an4 = 0, an8 = 0;
     
-    for(i = 0; i < 16; ++i) {
+    for(i = 0; i < 64; ++i) {
         while(!IFS0bits.AD1IF == 1);    //wait for the interrupt flag
         AD1CON1bits.ASAM = 0;
 
@@ -71,10 +71,10 @@ char readSensors(void){ //returns char with format 0b0000[Right][Top][Left][Midd
         IFS0bits.AD1IF = FLAG_DOWN;
     }
     
-    an0 = an0 >> 4;
-    an2 = an2 >> 4;
-    an4 = an4 >> 4;
-    an8 = an8 >> 4;
+    an0 = an0/64;
+    an2 = an2/64;
+    an4 = an4/64;
+    an8 = an8/64;
     
     if(an0 > THRESHOLD1) {
         result = result | 1;
