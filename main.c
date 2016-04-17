@@ -119,38 +119,24 @@ int main(void)
                 myState = FORWARD;
                 break;
             case FORWARD:
-                goForward();
-                delayUs(5000);
                 sensors = readSensors();
-                while(frontTriggered(sensors)) {
-                    if(rightTriggered(sensors) && !turnedRight) {
-                        //myState = TURN_RIGHT;
-                    }
-                    if(rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
-                        //myState = PIVOT;
-                    }
-                    sensors = readSensors();
-                }
-                if(myState == TURN_RIGHT || myState == PIVOT) {
-                    break;
-                }
-                turnedRight = 0;
-                if(rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
-                    //myState = TURN_RIGHT;
+                
+                if(frontTriggered(sensors)) {
+                    goForward();
                 }
                 else if(rightTriggered(sensors)) {
-                    myState = RIGHT;
+                    turnRight();
                 }
                 else if(leftTriggered(sensors)) {
-                    myState = LEFT;
-                }
-                else if(middleTriggered(sensors)) {
-                    myState = FORWARD;
-                }
-                else {
-                    myState = RIGHT;
+                    turnLeft();
                 }
                 
+                if(frontTriggered(sensors) && rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
+                    OC3RS = 500;
+                    OC4RS = 500;
+                }
+                
+                myState = FORWARD;
                 break;
             case LEFT:
                 turnLeft();

@@ -9,8 +9,8 @@ void turnRight(void){
     LATDbits.LATD11 = ENABLED;                 //#Assuming that D11 moves it backward when set high 
     LATGbits.LATG13 = DISABLED;                  //#Assuming that G13 moves it forward when set high 
     LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
-    OC3RS = 700;
-    OC4RS = 900;
+    OC3RS = 810;
+    OC4RS = 870;
 }
 
 void turnLeft(void){
@@ -20,8 +20,8 @@ void turnLeft(void){
     LATDbits.LATD11 = ENABLED;                 //#Assuming that D11 moves it backward when set high 
     LATGbits.LATG13 = DISABLED;                  //#Assuming that G13 moves it forward when set high 
     LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
-    OC3RS = 900;
-    OC4RS = 700;
+    OC3RS = 860;
+    OC4RS = 820;
 }
 
 void goForward(void){
@@ -32,6 +32,6 @@ void goForward(void){
     LATGbits.LATG13 = DISABLED;                  //#Assuming that G13 moves it forward when set high 
     LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
 
-    OC3RS = 890;
-    OC4RS = 900;
+    OC3RS = 810;    //890 OC3RS and 900 OC4RS seems to be a similar speed
+    OC4RS = 820;
 }
