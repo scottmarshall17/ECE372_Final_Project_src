@@ -38,6 +38,7 @@ int main(void)
 {
     int i = 0;
     state_t direction = FORWARD;
+    char pivot = 1;
     int turnedRight = 0;
     int voltageADC = 0;
     int lastVoltage = 0;
@@ -135,12 +136,21 @@ int main(void)
                 else if(leftTriggered(sensors)) {
                     turnLeft();
                 }
-                /*
+                
                 if(frontTriggered(sensors) && rightTriggered(sensors) && leftTriggered(sensors) && middleTriggered(sensors)) {
-                    OC3RS = 500;
-                    OC4RS = 500;
+                    if(pivot == 1) {
+                        LATDbits.LATD5 = DISABLED;                  //#Assuming that D5 moves it backward when set high 
+                        LATDbits.LATD11 = ENABLED;                 //#Assuming that D11 moves it backward when set high 
+                        LATGbits.LATG13 = ENABLED;                  //#Assuming that G13 moves it forward when set high 
+                        LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
+                        
+                        OC3RS = 800;
+                        OC4RS = 800;
+                        //for(i = 0; i < 5000; ++i) delayUs(1000);
+                        pivot = 1;
+                    }
                 }
-                */
+                
                 myState = FORWARD;
                 break;
             case LEFT:
