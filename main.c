@@ -144,9 +144,9 @@ int main(void)
                         LATGbits.LATG13 = ENABLED;                  //#Assuming that G13 moves it forward when set high 
                         LATGbits.LATG15 = DISABLED;                  //#Assuming that G15 moves it forward when set high 
                         
-                        OC3RS = 800;
-                        OC4RS = 800;
-                        //for(i = 0; i < 5000; ++i) delayUs(1000);
+                        OC3RS = 1000;
+                        OC4RS = 1000;
+                        //for(i = 0; i < 333; ++i) delayUs(1000);
                         pivot = 1;
                     }
                 }
